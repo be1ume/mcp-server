@@ -6,7 +6,7 @@ Claude MCP File Server
 
 ## Current Milestone
 
-M2 - Core File Tools
+M3 - Claude Web Connection
 
 ## Completed
 
@@ -22,15 +22,18 @@ M2 - Core File Tools
 - delete_file implemented
 - search_code implemented
 - get_repo_map implemented
+- Bearer-token authentication implemented for MCP Inspector
+- OAuth support implemented for Claude, including PKCE and token refresh
+- OAuth flow and MCP tool listing tested locally
+- ngrok IPv6/DNS connection issue fixed by switching DNS to Google DNS
 
 ## Next Steps
 
-- Add authentication
 - Add Git tools
 - Add logging
-- Run server with PM2
-- Expose server through ngrok
-- Connect to Claude Web
+- Restart the PM2-managed server with the OAuth changes
+- Reconnect the ngrok MCP URL in Claude using OAuth
+- Verify Claude can use the MCP tools
 - Perform multi-session demonstration
 
 ## Security Rules
@@ -43,4 +46,4 @@ Never expose authentication tokens.
 
 ## Notes
 
-The MCP server runs on port 3000.
+The MCP server runs on port 3000. Keep `MCP_AUTH_TOKEN` configured; use it on the OAuth sign-in page when connecting Claude. OAuth tokens are stored in memory, so users must reconnect after a server restart.

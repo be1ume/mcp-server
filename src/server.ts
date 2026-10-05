@@ -7,12 +7,29 @@ import { z } from "zod";
 import { safePath, getWorkspace } from "./sandbox.js";
 import { searchCode } from "./tools/search.js";
 import { getRepoMap } from "./tools/repo-map.js";
+import { configureOAuth } from "./oauth.js";
 
-const PORT = 3000;
+const PORT = Number(process.env.PORT ?? 3000);
+
+const AUTH_TOKEN = process.env.MCP_AUTH_TOKEN;
+const PUBLIC_MCP_URL = process.env.MCP_PUBLIC_URL;
 
 const app = express();
 
+app.set("trust proxy", 1);
 app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+
+const isOAuthAccessToken = configureOAuth(app, {
+  authToken: AUTH_TOKEN,
+  getResourceUrl: (req) => {
+    if (PUBLIC_MCP_URL) {
+      return new URL(PUBLIC_MCP_URL).toString().replace(/\/$/, "");
+    }
+
+    return `${req.protocol}://${req.get("host")}/mcp`;
+  }
+});
 
 const server = new McpServer({
   name: "claude-file-server",
@@ -331,6 +348,27 @@ server.tool(
 );
 
 app.post("/mcp", async (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  if (!AUTH_TOKEN) {
+    res.status(500).json({
+      error: "MCP_AUTH_TOKEN is not configured."
+    });
+
+    return;
+  }
+
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice("Bearer ".length) : "";
+  const isStaticToken = token === AUTH_TOKEN;
+
+  if (!isStaticToken && !isOAuthAccessToken(token)) {
+    const resourceMetadataUrl = new URL("/.well-known/oauth-protected-resource", `${req.protocol}://${req.get("host")}`).toString();
+    res.set("WWW-Authenticate", `Bearer resource_metadata="${resourceMetadataUrl}"`);
+    res.status(401).json({ error: "Unauthorized" });
+
+    return;
+  }
+
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined
   });
