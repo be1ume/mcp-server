@@ -1,0 +1,16 @@
+module.exports = {
+  apps: [
+    {
+      name: 'mcp-server',
+      script: 'dist/server.js',
+      cwd: __dirname,
+      node_args: '--env-file=.env'
+    },
+    {
+    name: 'ngrok',
+    script: 'cmd', //put ngrok if not running, or put the exact path of ngrok.exe
+    args: '/c ngrok http --url=https://shimmer-trimmer-goggles.ngrok-free.dev 3000',
+    interpreter: 'none'
+    }
+  ]
+};
