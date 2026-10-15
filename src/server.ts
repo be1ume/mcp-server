@@ -32,7 +32,7 @@ const isOAuthAccessToken = configureOAuth(app, {
 });
 
 const server = new McpServer({
-  name: "claude-file-server",
+  name: "mcp-server",
   version: "1.0.0"
 });
 

@@ -36,9 +36,15 @@ Claude -> HTTPS -> ngrok tunnel -> Node.js app (port 3000) -> workspace/
 │   ├── oauth.ts         OAuth endpoints used by Claude's connector sign-in
 │   ├── sandbox.ts       safePath(): rejects paths outside workspace/
 ├── workspace/           the only folder the tools can touch
-│   ├── CHECKPOINTS/
-│   ├── PLAN_LOG/
-│   └── workspace_1/
+│   ├── protocol.md                protocol the agent follows
+│   └── projects/                  where projects are located
+│       └── project_1/             each project has its own handoffs
+│           ├── PROJECT_STATE.md
+│           ├── PLAN_LOG/
+│           ├── CHECKPOINT/
+│           ├── DECISIONS/
+│           ├── git.log
+│           └── security.log
 └── package.json
 ```
 
