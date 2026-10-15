@@ -5,9 +5,9 @@ import fs from "fs/promises";
 import path from "path";
 import { z } from "zod";
 import { safePath, getWorkspace } from "./sandbox.js";
-import { searchCode } from "./tools/search.js";
-import { getRepoMap } from "./tools/repo-map.js";
 import { configureOAuth } from "./oauth.js";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 
 const PORT = Number(process.env.PORT ?? 3000);
 
@@ -35,6 +35,122 @@ const server = new McpServer({
   name: "claude-file-server",
   version: "1.0.0"
 });
+
+const execFileAsync = promisify(execFile);
+const MAX_GIT_OUTPUT_CHARS = 50_000;
+
+async function runGit(args: string[]): Promise<string> {
+  try {
+    const { stdout } = await execFileAsync(
+      "git",
+      ["--no-pager", "-c", "core.quotepath=false", ...args],
+      {
+        cwd: getWorkspace(),
+        timeout: 10_000,
+        maxBuffer: 10 * 1024 * 1024,
+        env: { ...process.env, GIT_OPTIONAL_LOCKS: "0", GIT_TERMINAL_PROMPT: "0" }
+      }
+    );
+
+    const output = stdout.trim();
+
+    return output.length > MAX_GIT_OUTPUT_CHARS
+      ? `${output.slice(0, MAX_GIT_OUTPUT_CHARS)}\n... output truncated`
+      : output;
+  } catch (error) {
+    const failure = error as NodeJS.ErrnoException & { stderr?: string };
+
+    if (failure.code === "ENOENT") {
+      throw new Error("git is not installed or not on PATH.");
+    }
+
+    throw new Error(failure.stderr?.trim() || failure.message);
+  }
+}
+
+async function getFiles(directory: string): Promise<string[]> {
+  const entries = await fs.readdir(directory, {
+    withFileTypes: true
+  });
+
+  const files: string[] = [];
+
+  for (const entry of entries) {
+    const fullPath = path.join(directory, entry.name);
+
+    if (entry.isDirectory()) {
+      files.push(...await getFiles(fullPath));
+    } else {
+      files.push(fullPath);
+    }
+  }
+
+  return files;
+}
+
+async function searchCode(query: string): Promise<string> {
+  const workspace = getWorkspace();
+
+  const files = await getFiles(workspace);
+
+  const results: string[] = [];
+
+  for (const file of files) {
+    try {
+      const content = await fs.readFile(file, "utf8");
+
+      if (content.includes(query)) {
+        results.push(
+          path.relative(workspace, file)
+        );
+      }
+    } catch {
+      // Ignore files that cannot be read as text.
+    }
+  }
+
+  return results.length > 0
+    ? results.join("\n")
+    : "No matches found.";
+}
+
+async function buildTree(
+  directory: string,
+  prefix = ""
+): Promise<string[]> {
+  const entries = await fs.readdir(directory, {
+    withFileTypes: true
+  });
+
+  const lines: string[] = [];
+
+  for (const entry of entries) {
+    const fullPath = path.join(directory, entry.name);
+
+    if (entry.isDirectory()) {
+      lines.push(`${prefix}├── ${entry.name}/`);
+
+      const children = await buildTree(
+        fullPath,
+        prefix + "│   "
+      );
+
+      lines.push(...children);
+    } else {
+      lines.push(`${prefix}├── ${entry.name}`);
+    }
+  }
+
+  return lines;
+}
+
+async function getRepoMap(): Promise<string> {
+  const tree = await buildTree(getWorkspace());
+
+  return tree.length > 0
+    ? tree.join("\n")
+    : "Workspace is empty.";
+}
 
 server.tool(
   "list_files",
@@ -330,6 +446,117 @@ server.tool(
           {
             type: "text",
             text: tree
+          }
+        ]
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Error: ${error}`
+          }
+        ],
+        isError: true
+      };
+    }
+  }
+);
+
+server.tool(
+  "git_status",
+  "Show the git status of the workspace.",
+  {},
+  async () => {
+    try {
+      const output = await runGit(["status", "--short", "--branch", "--", "."]);
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: output
+          }
+        ]
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Error: ${error}`
+          }
+        ],
+        isError: true
+      };
+    }
+  }
+);
+
+server.tool(
+  "git_diff",
+  "Show the working tree diff, or the staged diff, for the workspace or one path inside it.",
+  {
+    staged: z.boolean().optional(),
+    path: z.string().optional()
+  },
+  async ({ staged, path: diffPath }) => {
+    try {
+      const target = path.relative(getWorkspace(), safePath(diffPath || ".")) || ".";
+      const args = ["diff", "--no-color", "--no-ext-diff", "--no-textconv"];
+
+      if (staged) {
+        args.push("--staged");
+      }
+
+      args.push("--", target);
+
+      const output = await runGit(args);
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: output || (staged ? "No staged changes." : "No unstaged changes.")
+          }
+        ]
+      };
+    } catch (error) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Error: ${error}`
+          }
+        ],
+        isError: true
+      };
+    }
+  }
+);
+
+server.tool(
+  "git_log",
+  "Show recent commits that touched the workspace.",
+  {
+    limit: z.number().int().min(1).max(100).optional()
+  },
+  async ({ limit }) => {
+    try {
+      const output = await runGit([
+        "log",
+        `-n${limit ?? 10}`,
+        "--date=short",
+        "--pretty=format:%h %ad %an  %s",
+        "--",
+        "."
+      ]);
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: output || "No commits yet."
           }
         ]
       };
