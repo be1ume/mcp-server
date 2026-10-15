@@ -12,4 +12,3 @@ npm-debug.log*
 Thumbs.db
 
 ecosystem.config.cjs
-workspace/projects/

@@ -6,6 +6,17 @@ A Node.js + TypeScript MCP server that gives any MCP client (like Claude) access
 Claude -> HTTPS -> ngrok tunnel -> Node.js app (port 3000) -> workspace/
 ```
 
+## Tech stack
+
+| Area | Technology |
+|---|---|
+| Runtime and language | Node.js 20.6+, TypeScript, ES modules |
+| MCP | `@modelcontextprotocol/sdk` with Streamable HTTP |
+| HTTP server | Express |
+| Input validation | Zod |
+| Development and build | `tsx` for development; `tsc` for production builds |
+| Remote access and process management | ngrok and pm2 |
+
 ## Tools
 
 | Tool          | What it does                                                        |
@@ -19,7 +30,7 @@ Claude -> HTTPS -> ngrok tunnel -> Node.js app (port 3000) -> workspace/
 | `search_code` | Search text inside files                                            |
 | `git_status`  | Show repo status                                                    |
 | `git_diff`    | Show uncommitted changes                                            |
-| `git_commit`  | Stage everything and commit with a fixed identity                   |
+| `git_log`     | logs recent commits                   |
 
 ## Requirements
 
