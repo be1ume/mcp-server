@@ -20,6 +20,7 @@ Claude -> HTTPS -> ngrok -> Node.js server (port 3000) -> workspace/
 | Input validation | Zod |
 | Development and build | `tsx` for development; `tsc` for production builds |
 | Deployment | ngrok for remote access; pm2 for process management |
+| Authentication design | Secret and role in the URL path (planned); current implementation uses an `MCP_AUTH_TOKEN` bearer token and OAuth sign-in |
 
 The server provides tools for listing, reading, writing, replacing, moving, and deleting workspace files, searching code, viewing the workspace tree, and inspecting Git status, diffs, and history.
 

@@ -16,6 +16,7 @@ Claude -> HTTPS -> ngrok tunnel -> Node.js app (port 3000) -> workspace/
 | Input validation | Zod |
 | Development and build | `tsx` for development; `tsc` for production builds |
 | Remote access and process management | ngrok and pm2 |
+| Authentication design | Secret and role in the URL path (planned); current implementation uses an `MCP_AUTH_TOKEN` bearer token and OAuth sign-in |
 
 ## Tools
 
