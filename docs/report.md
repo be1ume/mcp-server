@@ -32,7 +32,27 @@ Workspace paths are checked by `safePath()` to prevent `../` traversal outside `
 
 ## Run and verify
 
-Build with `npm run build`, run the server with the documented setup, then connect through ngrok and Claude's custom connector. The README's quick check is to write and read `hello.txt`, then verify that reading `../package.json` is rejected.
+Build with `npm run build`, start the server with the documented setup, then connect Claude through ngrok and the custom connector. For the project demonstration, two sessions used the same `workspace/projects/binary-search-tree/` files:
+
+### Session 1: Create and verify the BST
+
+1. The agent used the MCP tools to create `bst.py` with `Node` and `BST` classes, including `insert()`, `search()`, and `inorder_traversal()`.
+2. It inserted `[50, 30, 70, 20, 40, 60, 80]` and checked both a present and absent value.
+3. Verification: `search(40) -> True`, `search(100) -> False`, and inorder traversal produced `[20, 30, 40, 50, 60, 70, 80]`.
+4. The work was recorded in the project state, plan, decision, and checkpoint so the next session could resume from files rather than chat history.
+
+See the [Session 1 screenshot](./evidence/06-demo-Session-1.png) and [S01 checkpoint](../workspace/projects/binary-search-tree/CHECKPOINTS/S01_checkpoint.md).
+
+### Session 2: Resume and add deletion
+
+1. The next session continued from the shared project files and added iterative `delete(value)`. It returns `True` when it removes a node and `False` if the value is absent.
+2. The tests covered all deletion shapes: a node with two children (`30`), a leaf (`20`), a node with one child (`60`), and the root (`50`). They also checked a missing value (`999`) and deleting until the tree was empty.
+3. After each operation, the script checked that inorder traversal remained sorted and matched the expected values. The checkpoint records that all checks passed.
+4. The updated state, plan, decision, and checkpoint document the implementation and next steps.
+
+See the [Session 2 screenshot](./evidence/07-demo-session-2.png) and [S02 checkpoint](../workspace/projects/binary-search-tree/CHECKPOINTS/S02_checkpoint.md).
+
+This demonstrates the handoff flow: session 1 saves code and progress in the workspace; session 2 reads those files, extends the code, verifies the change, and updates the handoff records. The README's separate server quick check is to write and read `hello.txt`, then confirm that reading `../package.json` is rejected.
 
 ## Evidence pictures
 
