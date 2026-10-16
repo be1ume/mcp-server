@@ -1,18 +1,6 @@
-"""Simple command-line calculator.
-
-Usage:
-    python calc.py <number> <operator> <number>
-
-Example:
-    python calc.py 2 + 3
-
-Supported operators: + - * /
-Note: most shells expand a bare * into filenames, so quote it: python calc.py 2 "*" 3
-"""
-
 import sys
 
-USAGE = 'Usage: python calc.py <number> <operator> <number>  (operators: + - * /)'
+OPERATORS = ("+", "-", "*", "/")
 
 
 def calculate(a, op, b):
@@ -29,24 +17,57 @@ def calculate(a, op, b):
     raise ValueError(f"Error: unsupported operator '{op}'. Use one of: + - * /")
 
 
+def format_result(result):
+    return int(result) if result.is_integer() else result
+
+
+def evaluate_expression(expression):
+    parts = expression.split()
+    if len(parts) != 3:
+        raise ValueError("Enter an expression like: 2 + 3")
+    try:
+        a = float(parts[0])
+        b = float(parts[2])
+    except ValueError as err:
+        raise ValueError("Error: both operands must be numbers.") from err
+    return format_result(calculate(a, parts[1], b))
+
+
+def interactive():
+    print("Interactive calculator. Enter an expression (e.g. 2 + 3) or 'quit' to exit.")
+    while True:
+        try:
+            expression = input("> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            break
+
+        if expression.lower() == "quit":
+            break
+        if not expression:
+            continue
+
+        try:
+            print(evaluate_expression(expression))
+        except (ZeroDivisionError, ValueError) as err:
+            print(err)
+    return 0
+
+
 def main(argv):
+    if len(argv) == 1:
+        return interactive()
+
     if len(argv) != 4:
-        print(USAGE, file=sys.stderr)
-        return 1
-
-    _, raw_a, op, raw_b = argv
-
-    try:
-        a = float(raw_a)
-        b = float(raw_b)
-    except ValueError:
-        print(f"Error: '{raw_a}' and '{raw_b}' must both be numbers.", file=sys.stderr)
+        print("Usage: python calc.py <number> <operator> <number>")
+        print("Example: python calc.py 2 + 3")
+        print("Note: quote the multiplication operator in most shells: '*'")
         return 1
 
     try:
-        result = calculate(a, op, b)
+        result = evaluate_expression(" ".join(argv[1:]))
     except (ZeroDivisionError, ValueError) as err:
-        print(err, file=sys.stderr)
+        print(err)
         return 1
 
     print(result)

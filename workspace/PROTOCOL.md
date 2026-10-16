@@ -68,7 +68,7 @@ At the end of a session, create `CHECKPOINTS/S<NN>_checkpoint.md` and update `PR
 Date:
 Project folder:
 Ended: clean | unclean
-Git: <branch>, last commit <short hash>, clean | dirty | not a repository
+Git: <branch>, last commit <short hash>, clean | dirty | dirty (awaiting user commit) | not a repository
 
 Done:
 -
@@ -82,7 +82,7 @@ Next:
 
 Increase the state revision and set the session status to `CLOSED`. If unable to finish the checkpoint, update the state at minimum and leave the status `OPEN`.
 
-Tell the user which files were created or updated.
+Tell the user which files were created or updated, then ask the user to commit the session's work (see "After the Checkpoint: User Commit" in Section 7).
 
 ## 5. Project State Format
 
@@ -156,17 +156,44 @@ Run from the workspace root, limited to the project folder:
 
 If there are uncommitted changes the last checkpoint doesn't explain, report them to the user and note them in the plan before editing anything.
 
+If the previous session is `CLOSED` but its work is still uncommitted, remind the user that the commit from the last session is still pending. Note it in the plan, and do not start new work on top of it until the user commits or explicitly tells you to continue.
+
 ### At checkpoint (before writing the checkpoint file)
 
 - Run `git status --short` and `git diff --stat` for the project folder.
 - Compare against the "Done" list. Flag any mismatch.
 - Fill in the `Git:` line of the checkpoint: `Git: <branch>, last commit <short hash>, clean | dirty`
+- The checkpoint is written before the user commits, so a session that changed files normally ends with `dirty (awaiting user commit)`. The `last commit` hash is the one that existed before the session's commit.
+
+### After the Checkpoint: User Commit
+
+Every session that changed files ends with the user committing the work. The commit is the user's step, not the agent's.
+
+After the checkpoint and `PROJECT_STATE.md` are saved, tell the user the session is not fully closed until they commit, and give them:
+
+1. The list of files created or updated (as already required in Section 4).
+2. A suggested commit message in the form `S<NN>(<slug>): <short summary of Done>`.
+3. The commands to run, limited to the project folder:
+
+   ```text
+   git status --short -- projects/<slug>/
+   git add projects/<slug>/
+   git commit -m "S<NN>(<slug>): <short summary>"
+   ```
+
+4. A reminder to review `git status` and the diff before committing, so that no secrets or unrelated files are included.
+
+Do not run these commands yourself. Do not suggest `git add -A` or `git add .`, because they can stage files from other projects.
+
+If the user declines to commit or says they will commit later, record `Git: ... dirty (awaiting user commit)` and list "User commit pending" under Open Work in `PROJECT_STATE.md`. Remove that line at the next session start once the commit is confirmed by `git status`.
+
+If the session changed no files in the project folder, no commit is needed. Say so.
 
 ### Rules
 
 - Only use `git status`, `git diff`, and `git log`. Prefer `--stat`, `--oneline`, and `-n` limits; read full diffs only for specific files.
 - Do not commit, stage, stash, checkout, reset, rebase, or push unless the user explicitly asks. Any history-rewriting command falls under Section 8 (Security: Destructive Actions).
-- If the workspace is not a git repository, write `Git: not a repository` and continue.
+- If the workspace is not a git repository, write `Git: not a repository` and continue. No commit reminder is needed.
 - Never record secrets that appear in diffs or logs in handoff files.
 
 ## 8. Security: Destructive Actions

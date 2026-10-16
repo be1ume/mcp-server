@@ -1,22 +1,19 @@
 # Checkpoint S01
-Date: 2026-10-16
+Date: date unknown
 Project folder: projects/simple-calculator/
 Ended: clean
-Git: main, last commit none (no commits yet), dirty (all files untracked, as expected for a new project)
+Git: main, last commit none (no commits yet), dirty (awaiting user commit)
 
 Done:
-- Created project structure: `PROJECT_STATE.md`, `PLAN_LOG/`, `DECISIONS/`, `CHECKPOINTS/`.
-- Wrote plan `PLAN_LOG/S01_001_initial-calculator-build.md` and marked all steps complete.
-- Created `calc.py`: supports `+ - * /` only, takes `<number> <operator> <number>` from command-line arguments, and prints a clear error (exit code 1) on division by zero instead of crashing. It also prints clear errors for wrong argument count, non-numeric input, and unsupported operators.
-- Recorded `DECISIONS/D001_command-line-arguments-for-input.md`.
-- Verified behavior by running a copy of `calc.py` in a scratch sandbox (the agent's shell could not reach the workspace). The file in the workspace was not executed directly.
-- Git check matched the Done list: only untracked files (`projects/`), no unexplained changes. Nothing was staged or committed.
+- Created project structure: PROJECT_STATE.md, PLAN_LOG/, DECISIONS/, CHECKPOINTS/
+- Wrote plan S01-001
+- Created calc.py supporting + - * / only; division by zero prints a clear error and exits with code 1
+- Recorded D001 (input via command-line arguments)
 
 Not done:
-- No automated tests were written (out of scope for this session).
-- No README or usage docs beyond the `calc.py` docstring (out of scope).
-- Nothing committed to git (not requested).
+- calc.py has not been executed or tested (no way to run it in this session)
+- User commit pending
 
 Next:
-1. Run `python calc.py 2 + 3` in the workspace to confirm it behaves as verified in the sandbox. Quote the operator for multiplication: `python calc.py 6 "*" 4`.
-2. Decide whether to add features or tests in a future session.
+1. Commit the S01 work (see commit instructions).
+2. In S02, run calc.py manually (e.g. `python calc.py 2 + 3`, `python calc.py 5 / 0`, `python calc.py 2 '*' 3`) and fix any issues.

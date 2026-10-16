@@ -1,24 +1,24 @@
 # Project State
 
 - **Project folder:** `projects/simple-calculator/`
-- **Current session:** `S01`
+- **Current session:** `S02`
 - **Session status:** `CLOSED`
-- **State revision:** `2`
+- **State revision:** `4`
 
 ## Goal
 
-A small Python command-line calculator that takes two numbers and an operator as arguments, e.g. `python calc.py 2 + 3`.
+A small Python calculator supporting +, -, *, and / through command-line arguments or interactive expressions.
 
 ## Status
 
-S01 complete. `calc.py` supports `+ - * /` with input from command-line arguments (see D001). Division by zero prints a clear error and exits with code 1. It also reports clear errors for wrong argument count, non-numeric input, and unsupported operators. Behavior was verified on a copy in a scratch sandbox, not directly in the workspace. Multiplication needs a quoted operator (`"*"`) because shells expand a bare `*`.
+`calc.py` supports one-shot command-line expressions and interactive mode when run without arguments. `test_calc.py` covers operators, division by zero, and expression parsing. Tests have not been run. D002 reverses D001.
 
 ## Open Work
 
-- No tests or README yet (out of scope for S01).
-- Nothing committed to git (no commits exist yet).
+- User commit pending (S02 work is uncommitted).
+- Run the Python unit tests.
 
 ## Next Steps
 
-1. Run `python calc.py 2 + 3` in the workspace to confirm it works as verified.
-2. Decide whether any further work (tests, docs, features) is wanted in a new session (S02).
+1. Run `python -m unittest projects/simple-calculator/test_calc.py` from the workspace root.
+2. Review and commit the S02 changes.

@@ -1,3 +1,5 @@
+# [Project report](docs/report.md) - Click this to go to project report
+
 # MCP File-Server Connector
 
 A Node.js + TypeScript MCP server that gives any MCP client (like Claude) access to one sandboxed `workspace/` folder over HTTPS.
@@ -29,6 +31,7 @@ Claude -> HTTPS -> ngrok tunnel -> Node.js app (port 3000) -> workspace/
 | `move_file`   | Move files in direcotry                                             |
 | `delete_file` | Delete a file (files only, not folders)                             |
 | `search_code` | Search text inside files                                            |
+| `get_repomap` | Show map                                                            |
 | `git_status`  | Show repo status                                                    |
 | `git_diff`    | Show uncommitted changes                                            |
 | `git_log`     | logs recent commits                   |
@@ -55,7 +58,6 @@ Claude -> HTTPS -> ngrok tunnel -> Node.js app (port 3000) -> workspace/
 │           ├── PLAN_LOG/
 │           ├── CHECKPOINT/
 │           ├── DECISIONS/
-│           ├── git.log
 │           └── security.log
 └── package.json
 ```
